@@ -7,9 +7,6 @@ export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     base: '/calculador-vulnerabilidad-rombos-entrena/',
-    build: {
-      outDir: 'docs',  // ← Cambiar de 'dist' a 'docs'
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
