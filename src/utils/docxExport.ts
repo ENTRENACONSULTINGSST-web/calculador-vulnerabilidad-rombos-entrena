@@ -1,7 +1,7 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 
 export interface WordReportData {
-  // Datos de la empresa (desde la interfaz)
+  // Datos de la empresa (placeholders)
   empresaRazonSocial?: string;
   empresaNit?: string;
   empresaDireccion?: string;
@@ -28,18 +28,12 @@ export interface WordReportData {
   vulLevel: string;
   redRombosCount: number;
   
-  // Amenazas personalizadas (desde el gestor)
-  amenazasPersonalizadas?: any[];
-  
-  // Recursos (equipos y externos)
-  recursosEquipos?: any[];
-  recursosExternos?: any[];
-  
   // Datos adicionales
   diamondDataURL?: string;
 }
 
 export async function exportToWord(data: WordReportData): Promise<void> {
+  
   // ==================== FUNCIONES AUXILIARES ====================
   
   const getNivelTexto = (nivel: string): string => {
@@ -64,7 +58,7 @@ export async function exportToWord(data: WordReportData): Promise<void> {
   
   const children: any[] = [];
   
-  // --- TÍTULO PRINCIPAL ---
+  // --- PORTADA / TÍTULO PRINCIPAL ---
   children.push(
     new Paragraph({
       text: "PLAN INSTITUCIONAL DE PREVENCIÓN Y EMERGENCIAS",
@@ -79,24 +73,24 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     })
   );
   
-  // --- TABLA DE DATOS DE LA EMPRESA ---
+  // --- 1. IDENTIFICACIÓN DE LA EMPRESA ---
   children.push(
     new Paragraph({
       text: "1. IDENTIFICACIÓN DE LA EMPRESA",
       heading: HeadingLevel.HEADING_1,
-      spacing: { before: 200, after: 200 },
+      spacing: { before: 400, after: 200 },
     })
   );
   
   const empresaData = [
-    ["RAZÓN SOCIAL:", data.empresaRazonSocial || "[RAZÓN SOCIAL]"],
-    ["NIT:", data.empresaNit || "[NIT]"],
-    ["DIRECCIÓN:", data.empresaDireccion || "[DIRECCIÓN]"],
-    ["TELÉFONO:", data.empresaTelefono || "[TELÉFONO]"],
-    ["CIUDAD:", data.empresaCiudad || "[CIUDAD]"],
-    ["NÚMERO DE EMPLEADOS:", (data.empresaEmpleados || "[NÚMERO]").toString()],
-    ["RESPONSABLE SG-SST:", data.empresaResponsableSST || "[RESPONSABLE SG-SST]"],
-    ["REPRESENTANTE LEGAL:", data.empresaRepresentanteLegal || "[REPRESENTANTE LEGAL]"],
+    ["RAZÓN SOCIAL:", data.empresaRazonSocial || "[RAZÓN SOCIAL PENDIENTE]"],
+    ["NIT:", data.empresaNit || "[NIT PENDIENTE]"],
+    ["DIRECCIÓN:", data.empresaDireccion || "[DIRECCIÓN PENDIENTE]"],
+    ["TELÉFONO:", data.empresaTelefono || "[TELÉFONO PENDIENTE]"],
+    ["CIUDAD:", data.empresaCiudad || "[CIUDAD PENDIENTE]"],
+    ["NÚMERO DE EMPLEADOS:", (data.empresaEmpleados || "[NÚMERO PENDIENTE]").toString()],
+    ["RESPONSABLE SG-SST:", data.empresaResponsableSST || "[RESPONSABLE SG-SST PENDIENTE]"],
+    ["REPRESENTANTE LEGAL:", data.empresaRepresentanteLegal || "[REPRESENTANTE LEGAL PENDIENTE]"],
   ];
   
   const empresaTableRows = empresaData.map(row => 
@@ -123,28 +117,39 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     })
   );
   
-  // --- AMENAZAS IDENTIFICADAS ---
+  // --- 2. MARCO NORMATIVO (texto fijo) ---
   children.push(
     new Paragraph({
-      text: "2. AMENAZAS IDENTIFICADAS",
+      text: "2. MARCO NORMATIVO",
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 400, after: 200 },
+    }),
+    new Paragraph("La legislación colombiana en materia de salud ocupacional establece en varias normas la obligatoriedad que tienen las entidades públicas y privadas para implementar el Programa Integral para la Prevención y el Control de Emergencias, todas fundamentadas en la obligación de todos los empleadores de '...garantizar la salud de los trabajadores...' (Numeral 348 del Código Sustantivo del Trabajo)."),
+    new Paragraph({ text: "", spacing: { after: 200 } }),
+    new Paragraph("Decreto 1072 de 2015 - Artículo 2.2.4.6.25: establece la obligación de implementar un Plan de Prevención, Preparación y Respuesta ante Emergencias."),
+    new Paragraph("Resolución 0312 de 2019 - Define los Estándares Mínimos del SG-SST, incluyendo plan de emergencias, brigada de emergencias, capacitación, simulacros e inspección de equipos."),
+    new Paragraph("Ley 1523 de 2012 - Adopta la Política Nacional de Gestión del Riesgo de Desastres."),
+  );
+  
+  // --- 3. AMENAZAS IDENTIFICADAS ---
+  children.push(
+    new Paragraph({
+      text: "3. AMENAZAS IDENTIFICADAS",
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 },
     })
   );
   
-  // Usar amenazas personalizadas o las estándar
-  const amenazasList = data.amenazasPersonalizadas && data.amenazasPersonalizadas.length > 0 
-    ? data.amenazasPersonalizadas 
-    : [
-        { nombre: "Incendio Estructural / Explosión", nivel: "POSIBLE", activa: true },
-        { nombre: "Sismo / Terremoto", nivel: "PROBABLE", activa: true },
-        { nombre: "Inundación por Lluvias", nivel: "POSIBLE", activa: true },
-        { nombre: "Derrame de Materiales Peligrosos", nivel: "POSIBLE", activa: true },
-        { nombre: "Hurto / Asonada / Terrorismo", nivel: "POSIBLE", activa: true },
-        { nombre: "Embalamiento Térmico de Baterías de Litio", nivel: "POSIBLE", activa: true },
-        { nombre: "Trabajo en Alturas", nivel: "POSIBLE", activa: true },
-        { nombre: "Riesgo Psicosocial", nivel: "POSIBLE", activa: true },
-      ];
+  const amenazasList = [
+    { nombre: "Incendio Estructural / Explosión", nivel: "POSIBLE", activa: true },
+    { nombre: "Sismo / Terremoto", nivel: "PROBABLE", activa: true },
+    { nombre: "Inundación por Lluvias / Escorrentía", nivel: "POSIBLE", activa: true },
+    { nombre: "Derrame de Materiales Peligrosos", nivel: "POSIBLE", activa: true },
+    { nombre: "Hurto / Asonada / Terrorismo (Riesgo Público)", nivel: "POSIBLE", activa: true },
+    { nombre: "Embalamiento Térmico de Baterías de Litio", nivel: "POSIBLE", activa: true },
+    { nombre: "Trabajo en Alturas", nivel: "POSIBLE", activa: true },
+    { nombre: "Riesgo Psicosocial", nivel: "POSIBLE", activa: true },
+  ];
   
   const amenazasRows = [
     new TableRow({
@@ -156,13 +161,13 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     }),
   ];
   
-  amenazasList.forEach((amenaza: any) => {
+  amenazasList.forEach((amenaza) => {
     amenazasRows.push(
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph(amenaza.nombre || amenaza.name || amenaza.threatName || "")] }),
-          new TableCell({ children: [new Paragraph(getNivelTexto(amenaza.nivel || amenaza.level || amenaza.threatLevel || "POSIBLE"))] }),
-          new TableCell({ children: [new Paragraph(amenaza.activa !== false ? "ACTIVA" : "INACTIVA")] }),
+          new TableCell({ children: [new Paragraph(amenaza.nombre)] }),
+          new TableCell({ children: [new Paragraph(getNivelTexto(amenaza.nivel))] }),
+          new TableCell({ children: [new Paragraph(amenaza.activa ? "ACTIVA" : "INACTIVA")] }),
         ],
       })
     );
@@ -183,49 +188,108 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     })
   );
   
-  // --- ANÁLISIS DE VULNERABILIDAD CORE ---
+  // --- 4. ANÁLISIS DE VULNERABILIDAD (con ítems detallados) ---
   children.push(
     new Paragraph({
-      text: "3. ANÁLISIS DE VULNERABILIDAD CORE",
+      text: "4. ANÁLISIS DE VULNERABILIDAD",
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 },
     })
   );
   
-  // Tabla de Personas
-  if (data.coreResults?.Personas) {
-    const p = data.coreResults.Personas;
-    children.push(
-      new Paragraph({ text: "3.1 Personas", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
-      new Paragraph(`Promedio: ${p.average.toFixed(2)} - ${getVulnerabilidadTexto(p.level)}`),
-      new Paragraph({ text: "", spacing: { after: 200 } })
-    );
-  }
+  // Definir los ítems para cada componente
+  const itemsPorComponente: { [key: string]: { id: string; name: string; questions: string[] }[] } = {
+    Personas: [
+      { id: "P_Organizacion", name: "Organización", questions: ["p_org_q1", "p_org_q2", "p_org_q3"] },
+      { id: "P_Capacitacion", name: "Capacitación", questions: ["p_cap_q1", "p_cap_q2", "p_cap_q3"] },
+      { id: "P_Dotacion", name: "Dotación", questions: ["p_dot_q1", "p_dot_q2", "p_dot_q3"] },
+    ],
+    Recursos: [
+      { id: "R_Materiales", name: "Materiales", questions: ["r_mat_q1", "r_mat_q2", "r_mat_q3"] },
+      { id: "R_Infraestructura", name: "Infraestructura", questions: ["r_inf_q1", "r_inf_q2", "r_inf_q3"] },
+      { id: "R_Equipos", name: "Equipos", questions: ["r_equ_q1", "r_equ_q2", "r_equ_q3"] },
+    ],
+    Sistemas: [
+      { id: "S_Servicios", name: "Servicios Públicos", questions: ["s_ser_q1", "s_ser_q2", "s_ser_q3"] },
+      { id: "S_Alternos", name: "Sistemas Alternos", questions: ["s_alt_q1", "s_alt_q2", "s_alt_q3"] },
+      { id: "S_Recuperacion", name: "Recuperación", questions: ["s_rec_q1", "s_rec_q2", "s_rec_q3"] },
+    ],
+  };
   
-  // Tabla de Recursos
-  if (data.coreResults?.Recursos) {
-    const r = data.coreResults.Recursos;
-    children.push(
-      new Paragraph({ text: "3.2 Recursos", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
-      new Paragraph(`Promedio: ${r.average.toFixed(2)} - ${getVulnerabilidadTexto(r.level)}`),
-      new Paragraph({ text: "", spacing: { after: 200 } })
-    );
-  }
+  // Calcular promedios por ítem
+  const calcularPromedioItem = (questionIds: string[]): number => {
+    let sum = 0;
+    let count = 0;
+    questionIds.forEach(id => {
+      if (data.answers[id] !== undefined) {
+        sum += data.answers[id];
+        count++;
+      }
+    });
+    return count > 0 ? parseFloat((sum / count).toFixed(2)) : 0;
+  };
   
-  // Tabla de Sistemas
-  if (data.coreResults?.Sistemas) {
-    const s = data.coreResults.Sistemas;
-    children.push(
-      new Paragraph({ text: "3.3 Sistemas y Procesos", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
-      new Paragraph(`Promedio: ${s.average.toFixed(2)} - ${getVulnerabilidadTexto(s.level)}`),
-      new Paragraph({ text: "", spacing: { after: 200 } })
-    );
-  }
+  // Generar tabla para cada componente
+  const componentes = ["Personas", "Recursos", "Sistemas"];
   
-  // --- NIVEL DE RIESGO CONSOLIDADO ---
+  componentes.forEach(componente => {
+    children.push(
+      new Paragraph({
+        text: `4.${componentes.indexOf(componente) + 1} ${componente}`,
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 100 },
+      })
+    );
+    
+    const itemsRows = [
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ text: "ÍTEM", bold: true })], width: { size: 40, type: WidthType.PERCENTAGE } }),
+          new TableCell({ children: [new Paragraph({ text: "PROMEDIO", bold: true })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+          new TableCell({ children: [new Paragraph({ text: "CALIFICACIÓN", bold: true })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+        ],
+      }),
+    ];
+    
+    const items = itemsPorComponente[componente];
+    items.forEach(item => {
+      const avg = calcularPromedioItem(item.questions);
+      let nivel = "";
+      if (avg <= 0.40) nivel = "ALTA (Crítico)";
+      else if (avg <= 0.60) nivel = "MEDIA (Advertencia)";
+      else nivel = "BAJA (Protegido)";
+      
+      itemsRows.push(
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph(item.name)] }),
+            new TableCell({ children: [new Paragraph(avg.toFixed(2))] }),
+            new TableCell({ children: [new Paragraph(nivel)] }),
+          ],
+        })
+      );
+    });
+    
+    children.push(
+      new Table({
+        rows: itemsRows,
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 1 },
+          bottom: { style: BorderStyle.SINGLE, size: 1 },
+          left: { style: BorderStyle.SINGLE, size: 1 },
+          right: { style: BorderStyle.SINGLE, size: 1 },
+          insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+          insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+        },
+      })
+    );
+  });
+  
+  // --- 5. NIVEL DE RIESGO CONSOLIDADO ---
   children.push(
     new Paragraph({
-      text: "4. NIVEL DE RIESGO CONSOLIDADO",
+      text: "5. NIVEL DE RIESGO CONSOLIDADO",
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 },
     }),
@@ -236,199 +300,118 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     new Paragraph({ text: "", spacing: { after: 200 } })
   );
   
-  // --- MÓDULOS TRANSVERSALES (opcional) ---
-  if (data.transversalResults && Object.keys(data.transversalResults).length > 0) {
-    children.push(
-      new Paragraph({
-        text: "5. MÓDULOS TRANSVERSALES ESPECIALES",
-        heading: HeadingLevel.HEADING_1,
-        spacing: { before: 400, after: 200 },
-      })
-    );
-    
-    const transRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph({ text: "MÓDULO", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "PROMEDIO", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "CALIFICACIÓN", bold: true })] }),
-        ],
-      }),
-    ];
-    
-    Object.values(data.transversalResults).forEach((t: any) => {
-      transRows.push(
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph(t.name)] }),
-            new TableCell({ children: [new Paragraph(t.average?.toFixed(2) || "0.00")] }),
-            new TableCell({ children: [new Paragraph(getVulnerabilidadTexto(t.level))] }),
-          ],
-        })
-      );
-    });
-    
-    children.push(
-      new Table({
-        rows: transRows,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.SINGLE, size: 1 },
-          bottom: { style: BorderStyle.SINGLE, size: 1 },
-          left: { style: BorderStyle.SINGLE, size: 1 },
-          right: { style: BorderStyle.SINGLE, size: 1 },
-          insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-          insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-        },
-      })
-    );
-  }
-  
-  // --- RECURSOS PARA EMERGENCIAS ---
+  // --- 6. RECURSOS PARA EMERGENCIAS ---
   children.push(
     new Paragraph({
       text: "6. RECURSOS PARA EMERGENCIAS",
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 },
+    }),
+    new Paragraph({ text: "6.1 Recursos de infraestructura y equipos", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } })
+  );
+  
+  const equiposRows = [
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph({ text: "DESCRIPCIÓN", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "CANTIDAD", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "UBICACIÓN", bold: true })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+      ],
+    }),
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("[DESCRIPCIÓN DEL EQUIPO]")] }),
+        new TableCell({ children: [new Paragraph("[CANTIDAD]")] }),
+        new TableCell({ children: [new Paragraph("[UBICACIÓN]")] }),
+      ],
+    }),
+  ];
+  
+  children.push(
+    new Table({
+      rows: equiposRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 1 },
+        bottom: { style: BorderStyle.SINGLE, size: 1 },
+        left: { style: BorderStyle.SINGLE, size: 1 },
+        right: { style: BorderStyle.SINGLE, size: 1 },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+      },
+    }),
+    new Paragraph({ text: "6.2 Recursos externos", heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 100 } })
+  );
+  
+  const externosRows = [
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph({ text: "ENTIDAD", bold: true })], width: { size: 40, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "CLASE DE AYUDA", bold: true })], width: { size: 35, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "TELÉFONO", bold: true })], width: { size: 25, type: WidthType.PERCENTAGE } }),
+      ],
+    }),
+    new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph("[ENTIDAD]")] }),
+        new TableCell({ children: [new Paragraph("[CLASE DE AYUDA]")] }),
+        new TableCell({ children: [new Paragraph("[TELÉFONO]")] }),
+      ],
+    }),
+  ];
+  
+  children.push(
+    new Table({
+      rows: externosRows,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 1 },
+        bottom: { style: BorderStyle.SINGLE, size: 1 },
+        left: { style: BorderStyle.SINGLE, size: 1 },
+        right: { style: BorderStyle.SINGLE, size: 1 },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+      },
     })
   );
   
-  // Equipos
-  if (data.recursosEquipos && data.recursosEquipos.length > 0) {
-    children.push(new Paragraph({ text: "6.1 Equipos e Infraestructura", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }));
-    
-    const equiposRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph({ text: "DESCRIPCIÓN", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "CANTIDAD", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "UBICACIÓN", bold: true })] }),
-        ],
-      }),
-    ];
-    
-    data.recursosEquipos.forEach((e: any) => {
-      equiposRows.push(
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph(e.descripcion || "")] }),
-            new TableCell({ children: [new Paragraph((e.cantidad || "0").toString())] }),
-            new TableCell({ children: [new Paragraph(e.ubicacion || "")] }),
-          ],
-        })
-      );
-    });
-    
-    children.push(
-      new Table({
-        rows: equiposRows,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.SINGLE, size: 1 },
-          bottom: { style: BorderStyle.SINGLE, size: 1 },
-          left: { style: BorderStyle.SINGLE, size: 1 },
-          right: { style: BorderStyle.SINGLE, size: 1 },
-          insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-          insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-        },
-      })
-    );
-  }
-  
-  // Contactos externos
-  if (data.recursosExternos && data.recursosExternos.length > 0) {
-    children.push(new Paragraph({ text: "6.2 Contactos Externos de Emergencia", heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 100 } }));
-    
-    const externosRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph({ text: "ENTIDAD", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "CLASE DE AYUDA", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "TELÉFONO", bold: true })] }),
-        ],
-      }),
-    ];
-    
-    data.recursosExternos.forEach((c: any) => {
-      externosRows.push(
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph(c.entidad || "")] }),
-            new TableCell({ children: [new Paragraph(c.ayuda || c.claseAyuda || "")] }),
-            new TableCell({ children: [new Paragraph(c.telefono || "")] }),
-          ],
-        })
-      );
-    });
-    
-    children.push(
-      new Table({
-        rows: externosRows,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.SINGLE, size: 1 },
-          bottom: { style: BorderStyle.SINGLE, size: 1 },
-          left: { style: BorderStyle.SINGLE, size: 1 },
-          right: { style: BorderStyle.SINGLE, size: 1 },
-          insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-          insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-        },
-      })
-    );
-  }
-  
-  // --- HALLAZGOS Y RECOMENDACIONES ---
+  // --- 7. PROCEDIMIENTOS OPERATIVOS NORMALIZADOS (PON) ---
   children.push(
     new Paragraph({
-      text: "7. HALLAZGOS Y RECOMENDACIONES",
+      text: "7. PROCEDIMIENTOS OPERATIVOS NORMALIZADOS (PON)",
       heading: HeadingLevel.HEADING_1,
       spacing: { before: 400, after: 200 },
     }),
-    new Paragraph("A continuación, se listan las preguntas calificadas como NO (0.0) o PARCIAL (0.5) durante la evaluación, junto con las recomendaciones técnicas para su corrección:")
+    new Paragraph({ text: "7.1 PON PARA ACTUAR EN CASO DE INCENDIO", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
+    new Paragraph("1. Detección del fuego / Activación de alarma manual"),
+    new Paragraph("2. Evaluar si el fuego es un conato (controlable con extintor)"),
+    new Paragraph("3. Si es conato: desplegar extintor portátil adecuado (PQS/CO2) a la base del fuego"),
+    new Paragraph("4. Si el fuego está fuera de control: activar alarma general e iniciar evacuación"),
+    new Paragraph("5. Corte inmediato de acometida general de energía y gas"),
+    new Paragraph("6. Llamar a Bomberos Oficiales (123) y dar ubicación exacta"),
+    new Paragraph("7. Guiar al personal al punto de encuentro y realizar conteo"),
+    new Paragraph("8. Entregar el mando a Bomberos y evaluar el retorno seguro"),
+    new Paragraph({ text: "", spacing: { after: 200 } }),
+    new Paragraph({ text: "7.2 PON PARA EVACUACIÓN", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
+    new Paragraph("1. Al escuchar la alarma de evacuación, conserve la calma"),
+    new Paragraph("2. Suspenda inmediatamente su actividad laboral"),
+    new Paragraph("3. Siga las instrucciones del coordinador de evacuación y los brigadistas"),
+    new Paragraph("4. Diríjase hacia la ruta de evacuación señalizada más cercana"),
+    new Paragraph("5. No corra, no grite, no empuje a otros"),
+    new Paragraph("6. Si hay humo, desplácese agachado y cubriendo nariz y boca"),
+    new Paragraph("7. Diríjase al punto de encuentro establecido"),
+    new Paragraph("8. Espere instrucciones del coordinador de evacuación"),
+    new Paragraph({ text: "", spacing: { after: 200 } }),
+    new Paragraph({ text: "7.3 PON PARA SISMO", heading: HeadingLevel.HEADING_2, spacing: { after: 100 } }),
+    new Paragraph("1. Durante el sismo: NO evacuar. Adopte posición de autoprotección"),
+    new Paragraph("2. Ubíquese bajo vigas robustas, escritorios o alejado de ventanas"),
+    new Paragraph("3. Al cesar el movimiento: evalúe salida y daños parciales"),
+    new Paragraph("4. Ordene evacuación inmediata por rutas preestablecidas"),
+    new Paragraph("5. Revise redes de gas y electricidad en el exterior"),
+    new Paragraph("6. Concéntrese en el punto de encuentro y atienda heridos"),
   );
   
-  if (data.answers) {
-    const hallazgosRows = [
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph({ text: "PREGUNTA", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "CALIFICACIÓN", bold: true })] }),
-          new TableCell({ children: [new Paragraph({ text: "RECOMENDACIÓN", bold: true })] }),
-        ],
-      }),
-    ];
-    
-    Object.entries(data.answers).forEach(([id, value]: [string, any]) => {
-      if (value === 0.0 || value === 0.5) {
-        hallazgosRows.push(
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(id)] }),
-              new TableCell({ children: [new Paragraph(value === 0.0 ? "NO (0.0)" : "PARCIAL (0.5)")] }),
-              new TableCell({ children: [new Paragraph("Revisar y corregir según normativa aplicable")] }),
-            ],
-          })
-        );
-      }
-    });
-    
-    children.push(
-      new Table({
-        rows: hallazgosRows,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.SINGLE, size: 1 },
-          bottom: { style: BorderStyle.SINGLE, size: 1 },
-          left: { style: BorderStyle.SINGLE, size: 1 },
-          right: { style: BorderStyle.SINGLE, size: 1 },
-          insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-          insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-        },
-      })
-    );
-  }
-  
-  // --- FIRMAS Y CONTROL DE CAMBIOS ---
+  // --- 8. FIRMAS Y APROBACIONES ---
   children.push(
     new Paragraph({
       text: "8. FIRMAS Y APROBACIONES",
@@ -437,27 +420,30 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     }),
     new Paragraph({ text: "", spacing: { after: 400 } }),
     new Paragraph({ text: "_________________________________________", alignment: AlignmentType.CENTER }),
-    new Paragraph({ text: data.empresaResponsableSST || "[RESPONSABLE SG-SST]", alignment: AlignmentType.CENTER }),
+    new Paragraph({ text: data.empresaResponsableSST || "[RESPONSABLE SG-SST PENDIENTE]", alignment: AlignmentType.CENTER }),
     new Paragraph({ text: "Responsable del SG-SST", alignment: AlignmentType.CENTER }),
     new Paragraph({ text: "", spacing: { after: 400 } }),
     new Paragraph({ text: "_________________________________________", alignment: AlignmentType.CENTER }),
-    new Paragraph({ text: data.empresaRepresentanteLegal || "[REPRESENTANTE LEGAL]", alignment: AlignmentType.CENTER }),
+    new Paragraph({ text: data.empresaRepresentanteLegal || "[REPRESENTANTE LEGAL PENDIENTE]", alignment: AlignmentType.CENTER }),
     new Paragraph({ text: "Representante Legal", alignment: AlignmentType.CENTER }),
-    new Paragraph({ text: "", spacing: { after: 400 } }),
+  );
+  
+  // --- 9. CONTROL DE CAMBIOS ---
+  children.push(
     new Paragraph({
       text: "9. CONTROL DE CAMBIOS",
       heading: HeadingLevel.HEADING_1,
-      spacing: { before: 200, after: 200 },
+      spacing: { before: 400, after: 200 },
     })
   );
   
   const cambiosRows = [
     new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ text: "FECHA", bold: true })] }),
-        new TableCell({ children: [new Paragraph({ text: "VERSIÓN", bold: true })] }),
-        new TableCell({ children: [new Paragraph({ text: "MOTIVO DE LA MODIFICACIÓN", bold: true })] }),
-        new TableCell({ children: [new Paragraph({ text: "RESPONSABLE", bold: true })] }),
+        new TableCell({ children: [new Paragraph({ text: "FECHA", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "VERSIÓN", bold: true })], width: { size: 15, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "MOTIVO DE LA MODIFICACIÓN", bold: true })], width: { size: 45, type: WidthType.PERCENTAGE } }),
+        new TableCell({ children: [new Paragraph({ text: "RESPONSABLE", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
       ],
     }),
     new TableRow({
@@ -465,7 +451,7 @@ export async function exportToWord(data: WordReportData): Promise<void> {
         new TableCell({ children: [new Paragraph(new Date().toLocaleDateString('es-CO'))] }),
         new TableCell({ children: [new Paragraph("1.0")] }),
         new TableCell({ children: [new Paragraph("Creación del plan de emergencias según metodología Diamante de Riesgo")] }),
-        new TableCell({ children: [new Paragraph(data.empresaResponsableSST || "[RESPONSABLE SG-SST]")] }),
+        new TableCell({ children: [new Paragraph(data.empresaResponsableSST || "[RESPONSABLE SG-SST PENDIENTE]")] }),
       ],
     }),
   ];
@@ -491,7 +477,7 @@ export async function exportToWord(data: WordReportData): Promise<void> {
     sections: [{
       properties: {
         page: {
-          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // 1 pulgada en twips
+          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
         },
       },
       children: children,
